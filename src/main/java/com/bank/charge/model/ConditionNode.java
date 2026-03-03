@@ -8,12 +8,14 @@ public class ConditionNode implements Node {
 
     private final String[] pathTokens;
     private final Operator operator;
-    private final Set<String> values;
+    private final String expected;
 
-    public ConditionNode(String fieldPath, Operator operator, Set<String> values) {
-        this.pathTokens = fieldPath.split("\\.");
+    public ConditionNode(String fieldPath, Operator operator, String expected) {
+        this.pathTokens = fieldPath.replaceAll("\\[.*?\\]", "")
+                .replaceAll("\"", "")
+                .split("\\.");
         this.operator = operator;
-        this.values = values;
+        this.expected = expected.replace("'", "");
     }
 
     @Override
@@ -26,17 +28,9 @@ public class ConditionNode implements Node {
 
         for (Object val : extracted) {
             String actual = String.valueOf(val);
-
             switch (operator) {
-                case EQ:
-                    if (values.contains(actual)) return true;
-                    break;
-                case NE:
-                    if (!values.contains(actual)) return true;
-                    break;
-                case IN:
-                    if (values.contains(actual)) return true;
-                    break;
+                case EQ: if (actual.equals(expected)) return true; break;
+                case NE: if (!actual.equals(expected)) return true; break;
             }
         }
         return false;

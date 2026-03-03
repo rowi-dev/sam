@@ -1,2 +1,2 @@
-market,priority,rate
-SG,1,0.05
+market,priority,rate,expression
+SG,1,0.05,data.cbs.enqryInf['CHRG']['casaSgmntIdr']=='R' && header['pmtTp']=='TT' && (header['subPmtTp']=='OT' || header['pmtTp']=='OFX') && data.chrgsInf['chrgBr']=='DEBT' && data.cbs.enqryInf['CHRG']['rltnshpTp']!='N'
