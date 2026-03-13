@@ -1,19 +1,3 @@
 market,priority,rate,expression
 SG,1,0.05,data.cbs.enqryInf['CHRG']['casaSgmntIdr']=='R' && header['pmtTp']=='TT' && (header['subPmtTp']=='OT' || header['pmtTp']=='OFX') && data.chrgsInf['chrgBr']=='DEBT' && data.cbs.enqryInf['CHRG']['rltnshpTp']!='N'
 
-
-
-Hi Team,
-
-The issue has now been fixed and the flow is available for testing.
-
-During the investigation, we identified that the problem occurred due to incorrect manual updates made in the DB, which caused data inconsistencies and resulted in the data sync and retrieval flow failure.
-
-Since this information was not mentioned when the issue was initially reported, additional time was required to identify the exact records and analyze the root cause. Also, updating all related data directly was not possible as it could impact other ongoing testing activities.
-
-Kindly ensure that any manual DB changes during testing are performed carefully and clearly communicated when reporting issues. This will help the team identify problems faster and avoid unnecessary investigation time.
-
-Thanks for your cooperation.
-
-Thanks,  
-Roshan
