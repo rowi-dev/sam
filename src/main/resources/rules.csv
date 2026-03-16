@@ -1,2 +1,15 @@
 market,priority,rate,expression
 SG,1,0.05,data.cbs.enqryInf['CHRG']['casaSgmntIdr']=='R' && header['pmtTp']=='TT' && (header['subPmtTp']=='OT' || header['pmtTp']=='OFX') && data.chrgsInf['chrgBr']=='DEBT' && data.cbs.enqryInf['CHRG']['rltnshpTp']!='N'
+
+
+
+
+Hi Priya,
+
+As requested, I am writing to provide an update on the current status of the AE Local TT deployment.
+
+As discussed earlier, there are several prioritized production deployments currently lined up for the AME region. We have had multiple discussions with the PSS and the respective teams regarding our deployment; however, we still do not have a confirmed deployment date.
+
+Our deployment is planned as a Blue deployment, while some other teams are planning Blue–Green deployments. If we proceed with our deployment earlier than them, their deployments may override our changes. Additionally, we need to properly align both the backend and frontend deployments, which requires careful coordination.
+
+We are planning to join the walkthrough meeting tomorrow to further discuss this with the PSS team. We will provide an update once
