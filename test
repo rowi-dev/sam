@@ -1,0 +1,281 @@
+{
+  "header": {
+    "isRetry": false,
+    "PRODUCT_CATEGORY": "ALL",
+    "msgId": "b60460b3-1f1b-43f4-8323-33c29c88731e",
+    "isRefreshCache": false,
+    "targetSystem": "ONPREM",
+    "COUNTRY_CODE": "SG"
+  },
+  "error": {
+    "haserror": null
+  },
+  "data": [
+    {
+      "metaData": {
+        "INTERFACE_NAME": "IBANK",
+        "RULE_ID": "0",
+        "PRODUCT_DERIVE_PRIORITY": "9934",
+        "UPDATED_DATE": "CURRENT_TIMESTAMP",
+        "PRODUCT_LEVEL": "TXN_VAL",
+        "PRODUCT_CODE": "IBNKTEST001",
+        "COUNTRY_CODE": "SG",
+        "ONLINE_PRODUCT": "1"
+      },
+      "keyid": "COUNTRY_CODE,PRODUCT_CODE",
+      "action": "UPDATE",
+      "tableName": "PRODUCT"
+    },
+    {
+      "metaData": {
+        "INTERFACE_NAME": "IBANK",
+        "RULE_ID": "41024746",
+        "PRODUCT_DERIVE_PRIORITY": "9934",
+        "CREATED_DATE": "CURRENT_TIMESTAMP",
+        "PRODUCT_LEVEL": "TXN_VAL",
+        "PRODUCT_CODE": "IBNKTEST001",
+        "COUNTRY_CODE": "SG",
+        "ONLINE_PRODUCT": "1"
+      },
+      "keyid": "COUNTRY_CODE,PRODUCT_CODE",
+      "action": "INSERT",
+      "tableName": "PRODUCT"
+    },
+    {
+      "metaData": {
+        "INTERFACE_NAME": "IBANK",
+        "PRODUCT_DERIVE_PRIORITY": "9934",
+        "RULE_ID": "0",
+        "UPDATED_DATE": "CURRENT_TIMESTAMP",
+        "PRODUCT_LEVEL": "TXN_VAL",
+        "PRODUCT_CODE": "IBNKTEST001",
+        "ONLINE_PRODUCT": "1",
+        "COUNTRY_CODE": "SG"
+      },
+      "keyid": "COUNTRY_CODE,PRODUCT_CODE",
+      "action": "DELETE",
+      "tableName": "PRODUCT"
+    },
+    {
+      "metaData": {
+        "RULE_ID": "41024746",
+        "OPERATOR": null,
+        "RULE_TYPE": "EXPR",
+        "CREATED_DATE": "CURRENT_TIMESTAMP",
+        "RULE_SEQ_NUM": "0",
+        "ATTRIBUTE_ID": null,
+        "LOGICAL": null,
+        "VALUE": "$123595 == 'Y' && $123594 == 'R' && $123456 == 'TT' && $123522 == 'IT' && ( $123489 == 'ACSC' || $123489 == 'ACKD' || $123489 == 'SETC' || $123489 == 'ACKC' || $123489 == 'CRED' || $123489 == 'ACSP' || $123489 == 'CRSP' )"
+      },
+      "keyid": "RULE_ID,RULE_SEQ_NUM",
+      "action": "INSERT",
+      "tableName": "RULES"
+    },
+    {
+      "metaData": {
+        "INTERFACE_NAME": "IBANK",
+        "TAX_TYPE_CODE": null,
+        "DESCRIPTION": "ITT Transaction Fee",
+        "UPDATED_DATE": "CURRENT_TIMESTAMP",
+        "PRODUCT_CODE": "IBNKTEST001",
+        "CHARGE_CODE": "TRAN000001",
+        "COUNTRY_CODE": "SG"
+      },
+      "keyid": "COUNTRY_CODE,PRODUCT_CODE,CHARGE_CODE",
+      "action": "UPDATE",
+      "tableName": "CHARGE_CODE"
+    },
+    {
+      "metaData": {
+        "INTERFACE_NAME": "IBANK",
+        "TAX_TYPE_CODE": null,
+        "DESCRIPTION": "ITT Transaction Fee",
+        "UPDATED_DATE": "CURRENT_TIMESTAMP",
+        "CHARGE_CODE": "TRAN000001",
+        "PRODUCT_CODE": "IBNKTEST001",
+        "COUNTRY_CODE": "SG"
+      },
+      "keyid": "COUNTRY_CODE,PRODUCT_CODE,CHARGE_CODE",
+      "action": "DELETE",
+      "tableName": "CHARGE_CODE"
+    },
+    {
+      "metaData": {
+        "INTERFACE_NAME": "IBANK",
+        "TAX_TYPE_CODE": null,
+        "CREATED_DATE": "CURRENT_TIMESTAMP",
+        "DESCRIPTION": "ITT Transaction Fee",
+        "CHARGE_CODE": "TRAN000001",
+        "PRODUCT_CODE": "IBNKTEST001",
+        "COUNTRY_CODE": "SG"
+      },
+      "keyid": "COUNTRY_CODE,PRODUCT_CODE,CHARGE_CODE",
+      "action": "INSERT",
+      "tableName": "CHARGE_CODE"
+    },
+    {
+      "metaData": {
+        "INTERFACE_NAME": "IBANK",
+        "CHARGE_ON1": "123452",
+        "UPDATED_DATE": "CURRENT_TIMESTAMP",
+        "CHARGE_ON2": null,
+        "CHARGE_CODE": "TRAN000001",
+        "PRODUCT_CODE": "IBNKTEST001",
+        "COUNTRY_CODE": "SG",
+        "COMPUTATION_METHOD": "FIXED_FLAT"
+      },
+      "keyid": "COUNTRY_CODE,PRODUCT_CODE,CHARGE_CODE,COMPUTATION_METHOD",
+      "action": "UPDATE",
+      "tableName": "CHARGE_METHOD"
+    },
+    {
+      "metaData": {
+        "INTERFACE_NAME": "IBANK",
+        "CHARGE_ON1": "123452",
+        "CREATED_DATE": "CURRENT_TIMESTAMP",
+        "CHARGE_ON2": null,
+        "PRODUCT_CODE": "IBNKTEST001",
+        "CHARGE_CODE": "TRAN000001",
+        "COMPUTATION_METHOD": "FIXED_FLAT",
+        "COUNTRY_CODE": "SG"
+      },
+      "keyid": "COUNTRY_CODE,PRODUCT_CODE,CHARGE_CODE,COMPUTATION_METHOD",
+      "action": "INSERT",
+      "tableName": "CHARGE_METHOD"
+    },
+    {
+      "metaData": {
+        "INTERFACE_NAME": "IBANK",
+        "CHARGE_ON1": "123452",
+        "UPDATED_DATE": "CURRENT_TIMESTAMP",
+        "CHARGE_ON2": null,
+        "PRODUCT_CODE": "IBNKTEST001",
+        "CHARGE_CODE": "TRAN000001",
+        "COUNTRY_CODE": "SG",
+        "COMPUTATION_METHOD": "FIXED_FLAT"
+      },
+      "keyid": "COUNTRY_CODE,PRODUCT_CODE,CHARGE_CODE,COMPUTATION_METHOD",
+      "action": "DELETE",
+      "tableName": "CHARGE_METHOD"
+    },
+    {
+      "metaData": {
+        "INTERFACE_NAME": "IBANK",
+        "UPDATED_DATE": "CURRENT_TIMESTAMP",
+        "PL_ACCOUNT": "0190006684",
+        "BRANCH_CODE": "ALL",
+        "CURRENCY_CODE": "999",
+        "PRODUCT_CODE": "IBNKTEST001",
+        "CHARGE_CODE": "TRAN000001",
+        "COUNTRY_CODE": "SG"
+      },
+      "keyid": "COUNTRY_CODE,BRANCH_CODE,PRODUCT_CODE,CHARGE_CODE,CURRENCY_CODE",
+      "action": "UPDATE",
+      "tableName": "PRODUCT_PL_ACCOUNT"
+    },
+    {
+      "metaData": {
+        "INTERFACE_NAME": "IBANK",
+        "CREATED_DATE": "CURRENT_TIMESTAMP",
+        "PL_ACCOUNT": "0190006684",
+        "BRANCH_CODE": "ALL",
+        "CURRENCY_CODE": "999",
+        "CHARGE_CODE": "TRAN000001",
+        "PRODUCT_CODE": "IBNKTEST001",
+        "COUNTRY_CODE": "SG"
+      },
+      "keyid": "COUNTRY_CODE,BRANCH_CODE,PRODUCT_CODE,CHARGE_CODE,CURRENCY_CODE",
+      "action": "INSERT",
+      "tableName": "PRODUCT_PL_ACCOUNT"
+    },
+    {
+      "metaData": {
+        "INTERFACE_NAME": "IBANK",
+        "UPDATED_DATE": "CURRENT_TIMESTAMP",
+        "PL_ACCOUNT": "0190006684",
+        "BRANCH_CODE": "ALL",
+        "CURRENCY_CODE": "999",
+        "CHARGE_CODE": "TRAN000001",
+        "PRODUCT_CODE": "IBNKTEST001",
+        "COUNTRY_CODE": "SG"
+      },
+      "keyid": "COUNTRY_CODE,BRANCH_CODE,PRODUCT_CODE,CHARGE_CODE,CURRENCY_CODE",
+      "action": "DELETE",
+      "tableName": "PRODUCT_PL_ACCOUNT"
+    },
+    {
+      "metaData": {
+        "INTERFACE_NAME": "IBANK",
+        "RULE_ID": "41024766",
+        "PRODUCT_DERIVE_PRIORITY": "9934",
+        "CREATED_DATE": "CURRENT_TIMESTAMP",
+        "PRODUCT_LEVEL": "TXN_VAL",
+        "PRODUCT_CODE": "IBNKTEST002",
+        "COUNTRY_CODE": "SG",
+        "ONLINE_PRODUCT": "1"
+      },
+      "keyid": "COUNTRY_CODE,PRODUCT_CODE",
+      "action": "INSERT",
+      "tableName": "PRODUCT"
+    },
+    {
+      "metaData": {
+        "RULE_ID": "41024766",
+        "OPERATOR": null,
+        "RULE_TYPE": "EXPR",
+        "CREATED_DATE": "CURRENT_TIMESTAMP",
+        "RULE_SEQ_NUM": "0",
+        "ATTRIBUTE_ID": null,
+        "LOGICAL": null,
+        "VALUE": "$123595 == 'Y' && $123594 == 'R' && $123456 == 'TT' && $123522 == 'IT' && ( $123489 == 'ACSC' || $123489 == 'ACKD' || $123489 == 'SETC' || $123489 == 'ACKC' || $123489 == 'CRED' || $123489 == 'ACSP' || $123489 == 'CRSP' )"
+      },
+      "keyid": "RULE_ID,RULE_SEQ_NUM",
+      "action": "INSERT",
+      "tableName": "RULES"
+    },
+    {
+      "metaData": {
+        "INTERFACE_NAME": "IBANK",
+        "TAX_TYPE_CODE": null,
+        "CREATED_DATE": "CURRENT_TIMESTAMP",
+        "DESCRIPTION": "ITT Transaction Fee",
+        "CHARGE_CODE": "TRAN000001",
+        "PRODUCT_CODE": "IBNKTEST002",
+        "COUNTRY_CODE": "SG"
+      },
+      "keyid": "COUNTRY_CODE,PRODUCT_CODE,CHARGE_CODE",
+      "action": "INSERT",
+      "tableName": "CHARGE_CODE"
+    },
+    {
+      "metaData": {
+        "INTERFACE_NAME": "IBANK",
+        "CHARGE_ON1": "123452",
+        "CREATED_DATE": "CURRENT_TIMESTAMP",
+        "CHARGE_ON2": null,
+        "CHARGE_CODE": "TRAN000001",
+        "PRODUCT_CODE": "IBNKTEST002",
+        "COUNTRY_CODE": "SG",
+        "COMPUTATION_METHOD": "FIXED_FLAT"
+      },
+      "keyid": "COUNTRY_CODE,PRODUCT_CODE,CHARGE_CODE,COMPUTATION_METHOD",
+      "action": "INSERT",
+      "tableName": "CHARGE_METHOD"
+    },
+    {
+      "metaData": {
+        "INTERFACE_NAME": "IBANK",
+        "CREATED_DATE": "CURRENT_TIMESTAMP",
+        "PL_ACCOUNT": "0190006684",
+        "BRANCH_CODE": "ALL",
+        "CURRENCY_CODE": "999",
+        "PRODUCT_CODE": "IBNKTEST002",
+        "CHARGE_CODE": "TRAN000001",
+        "COUNTRY_CODE": "SG"
+      },
+      "keyid": "COUNTRY_CODE,BRANCH_CODE,PRODUCT_CODE,CHARGE_CODE,CURRENCY_CODE",
+      "action": "INSERT",
+      "tableName": "PRODUCT_PL_ACCOUNT"
+    }
+  ]
+}
