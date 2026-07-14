@@ -1,0 +1,15 @@
+Hi Team,
+
+Regarding the SIT initiation, I would like to clarify my perspective on the testing approach.
+
+As mentioned previously, I believe the tester should first have at least a basic understanding of the system, the business requirements, and the overall solution. This will enable more productive discussions on the implementation, expected behavior, known limitations, and test scenarios. I do not think it is the most effective use of time for the developer to explain the entire business requirement from scratch, as the primary objective of SIT is to validate the implemented solution rather than transfer all business knowledge.
+
+From the development side, I have completed the initial technical testing using the limited test data currently available. This testing focused on verifying that the implementation functions correctly from a technical perspective.
+
+As this system is highly dependent on GBPS, there are known limitations in reproducing the complete GBPS behavior within our environment. Due to this complexity, I requested that a tester be involved from the early stages so they can become familiar with the system, its dependencies, complexities, and limitations before the formal SIT execution begins.
+
+Regarding the preparation of SIT test cases, I believe the QA/testing team is best positioned to own the creation of test cases based on the approved business requirements. I am more than happy to support by explaining the implementation, reviewing the proposed test scenarios, clarifying technical details, and ensuring the test cases provide sufficient coverage of the implemented functionality.
+
+I believe this collaborative approach will lead to a more efficient and comprehensive SIT process while ensuring both the business and technical aspects are adequately validated.
+
+Thank you.
