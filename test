@@ -1,12 +1,377 @@
-Hi [Name],
+I need to extend the existing MVEL2 rule derivation implementation to support **derived attributes**, while keeping the implementation simple, maintainable, and backward compatible.
 
-Just to clarify, the discussion mentioned here is a separate topic related to the pricing setup that GPBS IT is planning to implement.
+## Current behavior
 
-The initial email, however, was raised specifically regarding the FX convention requirement that we need to address.
+Currently, business rules support only attributes that are directly available in the request payload/context.
 
-I just wanted to highlight that these are two separate topics, so that we don’t inadvertently miss or overlook the required FX convention implementation.
+Example:
 
-Thanks for your understanding.
+```text
+(heder[pymtStts] == 'SUC' || heder[pymtStts] == 'ACT')
+&& data.amt[dbtCcr] == 'SGD'
+```
 
-Best regards,
-[Your Name]
+The rule is compiled and then evaluated against the request payload/context.
+
+## New requirement
+
+We now need to support **derived attributes**.
+
+Example derived attribute:
+
+```text
+Name:
+RECSTATUS
+
+Expression:
+(heder[pymtStts] == 'SUC' || heder[pymtStts] == 'ACT')
+```
+
+A business rule can then use:
+
+```text
+RECSTATUS == true && data.amt[dbtCcr] == 'SGD'
+```
+
+## Important design decision
+
+Do NOT modify, expand, or replace the business-rule expression during compilation.
+
+For example, do NOT transform:
+
+```text
+RECSTATUS == true && data.amt[dbtCcr] == 'SGD'
+```
+
+into:
+
+```text
+(heder[pymtStts] == 'SUC' || heder[pymtStts] == 'ACT')
+&& data.amt[dbtCcr] == 'SGD'
+```
+
+The business rule should remain unchanged and should be compiled normally by MVEL2.
+
+Instead, during rule compilation/configuration processing, determine whether the business rule references any configured derived attributes.
+
+For example:
+
+```text
+Business rule:
+RECSTATUS == true && data.amt[dbtCcr] == 'SGD'
+
+Compiled metadata:
+requiredDerivedAttributes = [RECSTATUS]
+```
+
+If a rule does not reference any derived attributes:
+
+```text
+Business rule:
+ACCOUNT_TYPE == 'N' && data.amt[dbtCcr] == 'USD'
+
+Compiled metadata:
+requiredDerivedAttributes = []
+```
+
+## Runtime behavior
+
+At runtime, evaluate only the derived attributes required by the particular rule.
+
+The desired flow is:
+
+```text
+Request
+  ↓
+Build evaluation context
+  ↓
+Get compiled rule
+  ↓
+Check required derived attributes
+  ↓
+For each required derived attribute:
+      Is it already available in context?
+          YES → reuse existing value
+          NO  → evaluate its compiled MVEL2 expression
+                 ↓
+                 add result to context
+  ↓
+Evaluate the original compiled business rule
+  ↓
+Return result
+```
+
+Example:
+
+Initial context:
+
+```text
+heder[pymtStts] = "SUC"
+data.amt[dbtCcr] = "SGD"
+```
+
+Rule metadata:
+
+```text
+requiredDerivedAttributes = [RECSTATUS]
+```
+
+`RECSTATUS` is not currently in the context, so evaluate:
+
+```text
+heder[pymtStts] == 'SUC' || heder[pymtStts] == 'ACT'
+```
+
+Result:
+
+```text
+RECSTATUS = true
+```
+
+Add it to the evaluation context:
+
+```text
+heder[pymtStts] = "SUC"
+data.amt[dbtCcr] = "SGD"
+RECSTATUS = true
+```
+
+Then evaluate the original compiled rule:
+
+```text
+RECSTATUS == true && data.amt[dbtCcr] == 'SGD'
+```
+
+## Lazy evaluation is important
+
+Do NOT calculate all configured derived attributes for every request.
+
+A derived attribute may be used by only one rule.
+
+For example:
+
+```text
+Rule R001
+Derived attributes:
+    RECSTATUS
+
+Rule R002
+Derived attributes:
+    none
+
+Rule R003
+Derived attributes:
+    DATRSEPABENEBICVAL
+```
+
+When evaluating R002, do not calculate `RECSTATUS` or `DATRSEPABENEBICVAL`.
+
+Only calculate derived attributes that the current rule actually requires.
+
+## Reuse existing context values
+
+Before evaluating a derived attribute, check whether the value already exists in the evaluation context.
+
+Conceptually:
+
+```java
+if (!context.containsKey(attributeName)) {
+    Object value = MVEL.executeExpression(
+        derivedAttribute.getCompiledExpression(),
+        context
+    );
+
+    context.put(attributeName, value);
+}
+```
+
+This prevents duplicate calculation.
+
+Do not modify the original request DTO unless the existing architecture specifically requires it. Prefer enriching the internal MVEL2 evaluation context.
+
+## Compilation / metadata
+
+Please inspect the existing implementation and determine the best place to add metadata to the compiled rule.
+
+The compiled rule should conceptually contain:
+
+```java
+CompiledRule {
+    Serializable compiledBusinessExpression;
+
+    List<CompiledDerivedAttribute> requiredDerivedAttributes;
+}
+```
+
+And a derived attribute should conceptually contain:
+
+```java
+CompiledDerivedAttribute {
+    String name;
+
+    Serializable compiledExpression;
+}
+```
+
+Derived expressions must be compiled once when the rule/configuration is loaded or reloaded, not for every transaction.
+
+## Identifying derived attributes used by a rule
+
+At compile/configuration time, determine which configured derived attributes are referenced by the business rule.
+
+For example, if the configured derived attributes are:
+
+```text
+RECSTATUS
+DATRSEPABENEBICVAL
+CUSTOMER_ELIGIBLE
+```
+
+and the rule is:
+
+```text
+RECSTATUS == true
+&& data.amt[dbtCcr] == 'SGD'
+```
+
+then the compiled rule metadata should contain:
+
+```text
+requiredDerivedAttributes = [RECSTATUS]
+```
+
+Do not simply perform an unsafe substring replacement of the rule expression.
+
+Use the existing MVEL2 capabilities or the safest approach that fits the current project architecture to identify references.
+
+If the existing codebase already has a mechanism for parsing/tokenizing rule attributes, reuse it.
+
+## Derived attribute configuration
+
+Support a model similar to:
+
+```java
+DerivedAttributeDefinition {
+    String name;
+    String expression;
+}
+```
+
+Example:
+
+```text
+name = RECSTATUS
+
+expression =
+(heder[pymtStts] == 'SUC' || heder[pymtStts] == 'ACT')
+```
+
+The design should also support future derived attributes such as:
+
+```text
+DATRSEPABENEBICVAL
+CUSTOMER_ELIGIBLE
+...
+```
+
+## Important: don't over-engineer
+
+Do not create a completely new rule engine.
+
+Reuse:
+
+* existing MVEL2 compilation
+* existing MVEL2 evaluation
+* existing rule loading/reloading
+* existing rule caching
+* existing evaluation context
+* existing configuration structures where practical
+
+The goal is to add a small derived-attribute capability around the existing rule engine.
+
+## Backward compatibility
+
+Existing rules must continue to work without any changes.
+
+For example:
+
+```text
+heder[pymtStts] == 'SUC'
+&& data.amt[dbtCcr] == 'SGD'
+```
+
+should continue to be compiled and evaluated exactly as before.
+
+Rules with no derived attributes should have:
+
+```text
+requiredDerivedAttributes = []
+```
+
+and should not perform any derived-attribute processing.
+
+## Example final implementation behavior
+
+Conceptually:
+
+```java
+public boolean evaluate(
+        CompiledRule rule,
+        Map<String, Object> context) {
+
+    for (CompiledDerivedAttribute derived :
+            rule.getRequiredDerivedAttributes()) {
+
+        if (!context.containsKey(derived.getName())) {
+
+            Object value = MVEL.executeExpression(
+                    derived.getCompiledExpression(),
+                    context
+            );
+
+            context.put(derived.getName(), value);
+        }
+    }
+
+    Object result = MVEL.executeExpression(
+            rule.getCompiledBusinessExpression(),
+            context
+    );
+
+    return Boolean.TRUE.equals(result);
+}
+```
+
+Please adapt this to the existing project's classes and coding conventions rather than blindly creating new classes.
+
+## Testing
+
+Add/update tests for:
+
+1. Existing payload-only rule.
+2. Rule with one derived attribute.
+3. Derived attribute evaluates to `true`.
+4. Derived attribute evaluates to `false`.
+5. Rule with multiple derived attributes.
+6. Rule with no derived attributes does not perform derived evaluation.
+7. Derived attribute already present in context is not recalculated.
+8. Derived attribute expression is compiled once and reused.
+9. Invalid derived-attribute expression is handled during configuration/compilation rather than transaction processing.
+10. Existing rule behavior remains unchanged.
+
+## Before coding
+
+First inspect the existing codebase and identify:
+
+1. Rule model.
+2. Rule compilation flow.
+3. MVEL2 compilation code.
+4. MVEL2 evaluation code.
+5. Evaluation context creation.
+6. Rule cache/reload mechanism.
+7. Existing attribute extraction/parsing logic.
+8. Existing unit/integration tests.
+
+Then briefly explain where you will integrate the derived-attribute dependency detection and lazy evaluation.
+
+After that, implement the change using the smallest maintainable modification to the existing architecture.
