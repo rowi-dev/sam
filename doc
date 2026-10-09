@@ -1,0 +1,247 @@
+# Fixed Flat Charge Calculation Flow
+
+## 1) Purpose
+This document explains the charge-calculation path implemented by `FixedFlatChargeMethod` for the Production Engineering team presentation.
+
+### Highlights
+- rule derivation that selects the billing rule before calculation
+- product / CRM resolution that maps the rule to the final billing setup
+- multi-method charge aggregation when multiple billing products are returned
+- how FX is used to normalize the charge-on amount before the final charge is computed
+- the fixed-flat calculator path only; other strategies are only referenced as context
+
+Scope:
+- only the fixed-flat strategy
+- only the calculation path after the billing inputs have already been resolved
+- includes the conditions, DB table sources, calculation formulas, and FX call behavior
+
+Out of scope:
+- rule derivation details beyond the summary view
+- product/CRM resolution details beyond the summary view
+- full multi-method aggregation implementation details
+- other calculators such as tiered or flat-rate strategies
+
+> Note: calculators such as tiered or flat-rate strategies are out of scope for this SG presentation and are only mentioned to show where `FixedFlatChargeMethod` fits in the broader charge engine.
+
+---
+
+## 2) Where the data comes from
+`FixedFlatChargeMethod` does **not** query the database directly. It receives DTOs that are populated upstream from these DB tables:
+
+| DB table | DTO used in this method | Purpose |
+|---|---|---|
+| `CHRG_BILLING_PRODUCT` | `BillingProductDto` | Supplies the charge mode, value, rate, min/max, and currency |
+| `CHRG_CHARGE_METHOD` | `ChargeMethodDto` | Supplies `chargeOn1` (for example `Amount` or `Txn_Count`) |
+| `CHRG_CHARGE_CODE` | `ChargeCodeDto` | Identifies the charge code context passed into the calculator |
+
+The runtime input to the method is:
+- `Charges request`
+- `BillingProductDto billingProduct`
+- `ChargeCodeDto chargeCode`
+- `ChargeMethodDto chargeMethod`
+
+### 2.1 How rule derivation and product/CRM resolution work at a high level
+1. Rule derivation picks the applicable business rule from `CHRG_RULES` using the request context.
+2. Product resolution maps that rule to a product code from `CHRG_PRODUCT`.
+3. CRM resolution maps the product and customer context to the correct setup from `CHRG_CRM_SETUP`.
+4. Billing-product resolution returns one or more matching billing products from `CHRG_BILLING_PRODUCT`.
+5. Each billing product is then processed independently by the calculator.
+
+---
+
+## 3) End-to-end flowchart
+
+```mermaid
+flowchart TD
+    A["Client sends charge request"] --> B["System prepares the charge request context"]
+    B --> C["Rule derivation from CHRG_RULES"]
+    C --> D["Matched Rule"]
+    D --> E["Product resolution from CHRG_PRODUCT"]
+    E --> F["Resolved Product Code"]
+    F --> G["CRM setup resolution from CHRG_CRM_SETUP"]
+    G --> H["Resolved CRM Setup"]
+    H --> I["Billing product derivation from CHRG_BILLING_PRODUCT"]
+    I --> J{"One or more billing products returned?"}
+    J -->|No| K["No billing product found - upstream error path"]
+    J -->|Yes| L["Iterate billing products one by one"]
+
+    L --> M["Load billing product, charge setup, and charge code details"]
+    M --> N{"Charge calculation type"}
+    N -->|Fixed Flat| O["Run Fixed Flat charge calculation"]
+    N -->|Tiered / Flat Rate / Other| P["Other charge calculation path - out of scope for this SG presentation"]
+
+    O --> Q["Start charge calculation"]
+    Q --> R["Determine the basis for charge calculation"]
+
+    R --> S{"Charge based on"}
+    S -->|Transaction Amount| T["Read transaction amount in the original currency"]
+    T --> U{"Does the transaction currency match the charge currency?"}
+    U -->|Yes| V["Use the amount as-is"]
+    U -->|No| W["Convert the amount using FX"]
+    W --> X["Use the converted amount as the charge basis"]
+
+    S -->|Transaction Count| Y["Use one transaction as the charge basis"]
+    S -->|Other| Z["Unsupported charge basis - stop calculation"]
+
+    V --> AA["Select the charge calculation mode"]
+    X --> AA
+    Y --> AA
+
+    AA --> AB{"Per unit charge?"}
+    AB -->|Yes| AC["Calculate charge per unit"]
+    AB -->|No| AD{"Percentage charge?"}
+    AD -->|Yes| AE["Calculate charge as a percentage"]
+    AD -->|No| AF{"Fixed flat charge?"}
+    AF -->|Yes| AG["Apply the fixed flat amount"]
+    AF -->|No| AH{"Per million charge?"}
+    AH -->|Yes| AI["Calculate charge per million"]
+    AH -->|No| AJ["No valid calculation mode matched - charge remains zero"]
+
+    AC --> AK["Apply minimum and maximum limits"]
+    AE --> AK
+    AG --> AK
+    AI --> AK
+    AJ --> AK
+
+    AK --> AL["Compare the charge against allowed limits"]
+    AL --> AM{"Is the charge amount valid?"}
+    AM -->|Yes| AN["Format the final charge amount in the target currency"]
+    AM -->|No| AO["Skip final formatting"]
+
+    AN --> AP["Store the result for this billing product"]
+    AO --> AP
+    AP --> AQ{"More billing products?"}
+    AQ -->|Yes| L
+    AQ -->|No| AR["Add all billing-product charges to get the final charge amount"]
+    AR --> AS["Return final response"]
+    Z --> AT["Return calculation error"]
+```
+
+---
+
+## 4) Calculation conditions
+
+### 4.1 Charge-on selection
+`deriveChargeOn()` supports only these values:
+
+| chargeOn1 | Behavior |
+|---|---|
+| `Amount` | Convert or reuse the transaction amount and use it as `chargeOnValue` |
+| `Txn_Count` | Use `BigDecimal.ONE` as `chargeOnValue` |
+| any other value | Raise `UNSUPPORTED_CHARGE_ON` |
+
+### 4.2 Computation mode selection
+The selected calculation branch depends on the billing-product flags:
+
+| Mode | Condition | Helper used |
+|---|---|---|
+| Absolute per unit | `BillingUtils.isComputeByAbsolutePerUnit(...)` | `ChargeUtils.doComputeByAbsoluteUnit(...)` |
+| Rate | `BillingUtils.isComputeByRate(...)` | `ChargeUtils.doComputeByRate(...)` |
+| Absolute flat | `BillingUtils.isComputeByAbsoluteFlat(...)` | `ChargeUtils.doComputeByAbsoluteFlat(...)` |
+| Per million | `BillingUtils.isComputeByPerMillion(...)` | `ChargeUtils.doComputeByPerMillion(...)` |
+| No match | none of the above | amount remains `ZERO` |
+
+### 4.3 Output adjustment
+After formula execution the method always applies:
+1. min/max clamp via `ChargeUtils.doCompareMinAndMaxChargeAmount(...)`
+2. currency formatting via `getFormattedCurrency(...)` when the result is non-negative
+
+---
+
+## 5) Calculation formulas
+
+| Branch | Formula |
+|---|---|
+| Absolute per unit | `chargeOnValue * chargeValue` |
+| Rate | `(chargeOnValue * chargeValue) / 100` |
+| Absolute flat | `chargeValue` |
+| Per million | `(chargeOnValue * chargeValue) / 1,000,000` |
+
+### 5.1 Charge-rate adjustment
+When the helper method supports `chargeRate`, the rate flag may change the computed amount before the final clamp/format step.
+
+### 5.2 Min/max clamp
+If the billing product defines a minimum or maximum, the computed value is clamped into the allowed range before being returned.
+
+### 5.3 Currency formatting
+The final amount is formatted using the project’s standard scale and rounding rules.
+
+---
+
+## 6) FX call behavior
+
+The FX hook is triggered only inside `deriveChargeOn()` when `chargeOn1 == Amount`.
+
+### Decision rule
+- If the source currency equals the billing-product charge currency, the method uses the amount directly.
+- If the currencies differ, the method calls `doFxConversion(...)` from the shared calculator base class.
+
+### FX call details
+`ChargeCalculationAbstract.doFxConversion(...)`:
+- checks whether conversion is actually required
+- resolves the FX service from the configured rules source
+- invokes `FXService.doFxConversion(...)`
+- logs FX observability metadata
+
+### Practical effect
+The fixed-flat calculator only needs the FX result as the `chargeOnValue`; it does not implement currency conversion itself.
+
+---
+
+## 7) Error and fallback behavior
+
+| Case | Result |
+|---|---|
+| Unsupported `chargeOn1` | `GbpsProcessingException(UNSUPPORTED_CHARGE_ON)` |
+| Unexpected exception during compute | wrapped as `GbpsProcessingException(CHARGE_COMPUTATION_FAILED)` |
+| No computation mode matched | amount remains zero and the method continues through clamp/format steps |
+| Negative computed amount | formatting branch is skipped |
+
+---
+
+## 8) Multi-billing-product handling
+
+Sometimes the upstream resolution layer returns a list of billing products instead of a single billing product.
+
+### How it is managed
+- The service layer iterates through the list one billing product at a time.
+- Each billing product is routed through the selected calculator independently.
+- The per-product charge results are then aggregated into the final response.
+
+### Why this is needed
+- One rule can map to more than one valid billing product.
+- Different billing products can carry different charge values, rates, currencies, or min/max limits.
+- Processing them separately keeps the charge logic deterministic and auditable.
+
+### Why FX is used
+FX is required when the amount used for calculation is in a different currency from the billing-product charge currency.
+
+In practical terms:
+- the incoming transaction amount may be in one currency
+- the charge configuration may expect another currency
+- FX converts or normalizes the amount so the calculator works with a consistent `chargeOnValue`
+- this ensures the final charge amount is derived in the correct charge currency before formatting and return
+
+---
+
+## 9) Execution summary
+
+1. Read the upstream billing inputs from DTOs.
+2. Derive `chargeOnValue` from `Amount` or `Txn_Count`.
+3. Convert via FX only when the charge-on amount currency differs from the billing product currency.
+4. Pick the fixed-flat formula based on the billing-product flags.
+5. Clamp the result to min/max bounds.
+6. Format and return the final charge amount.
+
+---
+
+## 10) Short reference for reviewers
+
+- Main class: `src/main/java/com/sc/csl/retail/charges/factory/FixedFlatChargeMethod.java`
+- Shared FX logic: `src/main/java/com/sc/csl/retail/charges/factory/ChargeCalculationAbstract.java`
+- Upstream DB tables: `CHRG_BILLING_PRODUCT`, `CHRG_CHARGE_METHOD`, `CHRG_CHARGE_CODE`
+
+
+
+
+
