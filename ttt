@@ -1,38 +1,11 @@
-I have already completed the production-code changes in this branch.
+What went well
 
-The change is:
+You have been extremely helpful and consistently focused on achieving the end goal. You readily support the team whenever needed and take ownership of your responsibilities. Your exceptional domain knowledge and ability to understand the project scope have been highly valuable. I am also impressed by your willingness to collaborate across teams and your ability to work effectively with different stakeholders.
 
-* The repository previously returned a single object.
-* It now returns a List of objects.
-* I changed two classes and the repository implementation/interface.
+What could I improve
 
-Please update the existing unit tests accordingly.
+This is not necessarily an area of improvement, as you already demonstrate very strong technical skills. However, it would be valuable for you to work on a new project from its initial stages through completion. This would provide you with a different and valuable experience, further support your career development, and bring additional benefits to the team.
 
-Before making changes:
+Additional comments
 
-1. Inspect the current git diff to understand exactly what changed.
-2. Identify all affected unit-test classes and repository mocks/stubs.
-3. Inspect the existing test patterns and follow the project’s current Mockito/JUnit conventions.
-
-Then:
-4. Update the tests to work with the new List-based repository response.
-5. Update test data, Mockito stubbing, assertions, and verifications as required.
-6. Make sure the tests verify the actual business behavior, not just that the code executes.
-7. Cover relevant cases such as:
-
-* one returned object
-* multiple returned objects
-* empty list, if applicable
-* existing error/exception scenarios
-
-8. Do not modify production code. Only modify tests unless you identify a test compilation issue caused by the production API change.
-9. Run the affected unit tests.
-10. If anything fails, investigate the failure and fix the tests.
-11. Finally, show me:
-
-* files changed
-* tests added/updated
-* test execution result
-* any remaining issues
-
-Keep the changes focused. Do not make unrelated refactoring.
+You are one of the most exceptional resources I have ever worked with. I have encountered only a few professionals with your level of expertise, ownership, and commitment. Please keep up the excellent work.
